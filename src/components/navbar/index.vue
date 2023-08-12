@@ -162,7 +162,7 @@
               </a-space>
             </a-doption>
             <a-doption>
-              <a-space @click="$router.push({ name: 'Info' })">
+              <a-space @click="handleShowUserCenter">
                 <icon-user />
                 <span>
                   {{ $t('messageBox.userCenter') }}
@@ -189,6 +189,19 @@
         </a-dropdown>
       </li>
     </ul>
+    <a-modal
+      :visible="userCenterVisible"
+      :footer="false"
+      title="用户中心"
+      :mask-closable="false"
+      @cancel="onHandleCloseUserCenter"
+      :esc-to-close="false"
+      :modal-style="{ height: '90%'}"
+      :body-style="{ height: 'calc(100% - 48px)'}"
+      unmount-on-close
+    >
+      <UserCenter/>
+    </a-modal>
   </div>
 </template>
 
@@ -201,6 +214,7 @@
   import useLocale from '@/hooks/locale';
   import useUser from '@/hooks/user';
   import Menu from '@/components/menu/index.vue';
+  import UserCenter from '@/components/user-center/index.vue';
   import MessageBox from '../message-box/index.vue';
 
   const appStore = useAppStore();
@@ -260,6 +274,14 @@
     Message.success(res as string);
   };
   const toggleDrawerMenu = inject('toggleDrawerMenu') as () => void;
+
+  const userCenterVisible = ref(false)
+  const handleShowUserCenter = () => {
+    userCenterVisible.value = true
+  }
+  const onHandleCloseUserCenter = () => {
+    userCenterVisible.value = false
+  }
 </script>
 
 <style scoped lang="less">
