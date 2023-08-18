@@ -12,6 +12,8 @@ export default {
   'menu.server.monitor': '实时监控-服务端',
   'menu.projects': '项目管理',
   'menu.projects.list': '项目列表',
+  'menu.interfaces': '接口管理',
+  'menu.interfaces.list': '接口列表',
   'menu.list': '列表页',
   'menu.result': '结果页',
   'menu.exception': '异常页',

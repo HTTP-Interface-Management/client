@@ -21,12 +21,12 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   extends: [
     // Airbnb JavaScript Style Guide https://github.com/airbnb/javascript
-    'airbnb-base',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:import/recommended',
-    'plugin:import/typescript',
-    'plugin:vue/vue3-recommended',
-    'plugin:prettier/recommended',
+    // 'airbnb-base',
+    // 'plugin:@typescript-eslint/recommended',
+    // 'plugin:import/recommended',
+    // 'plugin:import/typescript',
+    // 'plugin:vue/vue3-recommended',
+    // 'plugin:prettier/recommended',
   ],
   settings: {
     'import/resolver': {

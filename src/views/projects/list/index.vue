@@ -95,7 +95,6 @@
       padding: 16px 32px;
     }
 
-
     .footer{
       background: var(--color-bg-1);
       padding: 16px 32px 32px 32px;

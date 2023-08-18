@@ -14,7 +14,7 @@ const PROJECTS: AppRouteRecordRaw = {
   children: [
     {
       path: 'list',
-      name: 'list',
+      name: 'projectsList',
       component: () => import('@/views/projects/list/index.vue'),
       meta: {
         locale: 'menu.projects.list',

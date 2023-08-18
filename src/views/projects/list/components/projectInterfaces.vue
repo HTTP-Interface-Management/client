@@ -21,7 +21,10 @@
           </div>
         </div>
         <a-button-group>
-          <a-button type="outline">
+          <a-button
+            type="outline"
+            @click="onHandleCheckInterfaceModalVisible"
+          >
             <template #icon>
               <icon-eye/>
             </template>
@@ -32,7 +35,7 @@
       </div>
       <template #extra>
         <a-button-group>
-          <a-button @click.stop="">
+          <a-button @click.stop="onHandleCreateInterfaceModalVisible">
             <template #icon>
               <icon-plus/>
             </template>
@@ -45,11 +48,68 @@
         </a-button-group>
       </template>
     </a-collapse-item>
+    <a-modal
+      title="创建接口"
+      fullscreen
+      :esc-to-close="false"
+      :mask-closable="false"
+      :visible="createInterfaceModalVisible"
+      @cancel="onCancelCreateInterfaceModal"
+      :modal-style="customModalStyle.modalStyle"
+      :body-style="customModalStyle.bodyStyle"
+      :mask-style="customModalStyle.maskStyle"
+    >
+      <create-interface/>
+    </a-modal>
+    <a-modal
+      title="查看接口"
+      fullscreen
+      :esc-to-close="false"
+      :mask-closable="false"
+      :visible="checkInterfaceModalVisible"
+      @cancel="onCancelCheckInterfaceModal"
+      :modal-style="customModalStyle.modalStyle"
+      :body-style="customModalStyle.bodyStyle"
+      :mask-style="customModalStyle.maskStyle"
+    >
+      <check-interface/>
+    </a-modal>
   </a-collapse>
 </template>
 
 <script setup lang="ts">
   import { IconPlus, IconDelete, IconLink, IconEye} from "@arco-design/web-vue/es/icon";
+  import checkInterface from '@/components/check-interface/index.vue';
+  import createInterface from '@/components/create-interface/index.vue';
+  import { ref } from "vue";
+
+  const customModalStyle = {
+    modalStyle: {
+      borderRadius: '0',
+      maxWidth: '1200px'
+    },
+    bodyStyle: {
+      flexGrow: '1' ,
+      padding: '0'
+    },
+    maskStyle: {
+    }
+  }
+
+  let createInterfaceModalVisible = ref(false);
+  let checkInterfaceModalVisible = ref(false);
+  const onHandleCreateInterfaceModalVisible = () => {
+    createInterfaceModalVisible.value = true;
+  }
+  const onCancelCreateInterfaceModal = () => {
+    createInterfaceModalVisible.value = false;
+  }
+  const onHandleCheckInterfaceModalVisible = () => {
+    checkInterfaceModalVisible.value = true;
+  }
+  const onCancelCheckInterfaceModal = () => {
+    checkInterfaceModalVisible.value = false;
+  }
 </script>
 
 <style scoped lang="less">
