@@ -13,12 +13,13 @@
           <a-button
             type="primary"
             class="add-btn"
+            @click="onHandleCreateProject"
           >
             <template #icon>
               <icon-plus/>
             </template>
             新建项目
-          </a-button>
+          </a-button >
         </template>
       </a-page-header>
     </div>
@@ -43,6 +44,21 @@
     >
       <ProjectInfo @onHandleCloseModal="onCancelProjectModal"/>
     </a-modal>
+
+    <a-modal 
+      title="创建项目"
+      fullscreen
+      :esc-to-close="false"
+      :mask-closable="false"
+      :visible="createProjectModalVisible"
+      @cancel="onCancelCreateProjectModal"
+      :modal-style="customModalStyle.modalStyle"
+      :body-style="customModalStyle.maskStyle"
+      :mask-style="customModalStyle.bodyStyle"
+    >
+      <create-project/>
+    </a-modal>    
+
   </div>
 </template>
 
@@ -51,6 +67,7 @@
   import { ref } from "vue";
   import ProjectInfo from '@/views/projects/list/components/projectInfo.vue';
   import ProjectItem from '@/views/projects/list/components/projectItem.vue';
+  import createProject from '@/components/create-project/index.vue'
 
   const customModalStyle = {
     modalStyle: {
@@ -72,6 +89,13 @@
     modalVisible.value = false
   }
 
+  let createProjectModalVisible = ref(false)
+  const onHandleCreateProject = () => {
+    createProjectModalVisible.value = true;
+  }
+  const onCancelCreateProjectModal = () => {
+    createProjectModalVisible.value = false;
+  }
 </script>
 
 <style scoped lang="less">
