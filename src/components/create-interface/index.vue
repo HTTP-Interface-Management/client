@@ -5,7 +5,7 @@
         <div class="interface-data">
           <div class="items">
             <h3>接口名称</h3>
-            <a-input v-model= "data.name" />
+            <a-input v-model= "interfaceData.name" />
           </div>
           <div class="items">
             <h3>所属项目集</h3>
@@ -18,15 +18,11 @@
           </div> -->
           <div class="items">
             <h3>接口功能描述</h3>
-            <a-input v-model= "data.description"/>
+            <a-input v-model= "interfaceData.description"/>
           </div>
           <div class="items">
             <h3>接口地址（URL）</h3>
-            <a-input v-model="data.url"/>
-          </div>
-          <div class="items">
-            <h3>支持格式</h3>
-            <a-input />
+            <a-input v-model="interfaceData.url"/>
           </div>
           <div class="items">
             <h3>HTTP请求方式</h3>
@@ -44,21 +40,27 @@
           </div>
           <div class="items">
             <h3>请求参数</h3>
-            <a-tabs default-active-key="1">
-              <!-- <template #extra>
-                <a-button shape="round" type="primary" @click="">Add</a-button>
-              </template> -->
-              <a-tab-pane key="1" title="Request Headers">
-                <a-table 
-                :columns="columns"
-                :data="headers" 
-                >     
+            <a-tabs default-active-key="1" type="card">
+              <template #extra>
+                <a-link type="primary" @click="">Add</a-link>
+              </template>
+              <a-tab-pane
+                key="1"
+                title="Request Headers"
+              >
+                <a-table
+                :columns="requestTableColumns"
+                :data="headers"
+                :pagination="false"
+                >
                   <template #param="{ rowIndex }">
                     <a-input v-model="headers[rowIndex].param" />
-                  </template>  
+                  </template>
                   <template #type="{ rowIndex }">
-                    <a-input v-model="headers[rowIndex].type" />
-                  </template> 
+                    <a-select v-model="headers[rowIndex].type">
+                      <a-option v-for="type of cookiesAndHeaderType" :value="type">{{type}}</a-option>
+                    </a-select>
+                  </template>
                   <template #required="{ rowIndex }">
                     <a-select v-model="headers[rowIndex].required" @change="">
                       <a-option v-for="value of [true,false]">{{value}}</a-option>
@@ -66,114 +68,167 @@
                   </template>
                   <template #defaultparam="{ rowIndex }">
                     <a-input v-model="headers[rowIndex].defaultparam" />
-                  </template> 
+                  </template>
                   <template #description="{ rowIndex }">
                     <a-input v-model="headers[rowIndex].description" />
                   </template>
-                </a-table> 
+                </a-table>
               </a-tab-pane>
-              <a-tab-pane key="2" title="Request Body">
+
+              <a-tab-pane
+                title="Params"
+                key="2"
+              >
+                <div class="mock-params">
+                  <div class="params-title">Query参数</div>
+                  <a-table
+                  />
+                  <div class="params-title">动态参数</div>
+                  <a-table
+                  />
+                </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="3" title="Request Body">
                 <a-space>
                   <a-tabs default-active-key="2">
                     <a-tab-pane key="1" title="none">
-                      <a-textarea disabled ></a-textarea>
+                      <a-empty description="未设置Body"/>
                     </a-tab-pane>
                     <a-tab-pane key="2" title="form-data">
-                      <a-table 
-                      :columns="columns"
-                      :data="body" 
-                      >   
+                      <a-table
+                      :columns="requestTableColumns"
+                      :data="body"
+                      :pagination="false"
+                      >
                         <template #param="{ rowIndex }">
                           <a-input v-model="body[rowIndex].param" />
-                        </template>  
+                        </template>
                         <template #type="{ rowIndex }">
-                          <a-input v-model="body[rowIndex].type" />
-                        </template> 
+                          <a-select v-model="body[rowIndex].type">
+                            <a-option v-for="type of bodyFormDataType" :value="type">{{type}}</a-option>
+                          </a-select>
+                        </template>
                         <template #required="{ rowIndex }">
                           <a-select v-model="body[rowIndex].required" @change="">
                             <a-option v-for="value of [true,false]">{{value}}</a-option>
                           </a-select>
                         </template>
-                        <template #defaultparam="{ rowIndex }">
-                          <a-input v-model="body[rowIndex].defaultparam" />
-                        </template> 
                         <template #description="{ rowIndex }">
                           <a-input v-model="body[rowIndex].description" />
-                        </template>                
-                      </a-table> 
+                        </template>
+                      </a-table>
                     </a-tab-pane>
                     <a-tab-pane key="3" title="json">
-                      <a-textarea></a-textarea>
+                      <codemirror :style="{ height: '200px'}"/>
                     </a-tab-pane>
                     <a-tab-pane key="4" title="xml">
-                      <a-textarea></a-textarea>
+                      <codemirror :style="{ height: '200px'}"/>
                     </a-tab-pane>
                     <a-tab-pane key="5" title="yaml">
-                      <a-textarea></a-textarea>
+                      <codemirror :style="{ height: '200px'}" />
                     </a-tab-pane>
-                  </a-tabs>                                  
-                </a-space>                
+                  </a-tabs>
+                </a-space>
               </a-tab-pane>
-              <a-tab-pane key="3" title="Example">
-                <a-table 
-                :columns="columns"
-                :data="cookies" 
-                >     
+              <a-tab-pane key="4" title="Cookies">
+                <a-table
+                :columns="requestTableColumns"
+                :data="cookies"
+                :pagination="false"
+                >
                   <template #param="{ rowIndex }">
                     <a-input v-model="cookies[rowIndex].param" />
-                  </template>  
+                  </template>
                   <template #type="{ rowIndex }">
-                    <a-input v-model="cookies[rowIndex].type" />
-                  </template> 
+                    <a-select v-model="cookies[rowIndex].type">
+                      <a-option v-for="type of cookiesAndHeaderType" :value="type">{{type}}</a-option>
+                    </a-select>
+                  </template>
+                  <template #required="{ rowIndex }">
+                    <a-select v-model="cookies[rowIndex].required" @change="">
+                      <a-option v-for="value of [true,false]">{{value}}</a-option>
+                    </a-select>
+                  </template>
+                  <template #description="{ rowIndex }">
+                    <a-input v-model="cookies[rowIndex].description" />
+                  </template>
+                </a-table>
+              </a-tab-pane>
+            </a-tabs>
+          </div>
+
+          <div class="items">
+            <h3>返回数据</h3>
+            <a-tabs default-active-key="1" type="card">
+              <template #extra>
+                <a-link type="primary">Add</a-link>
+              </template>
+              <a-tab-pane key="1" title="Response Headers">
+
+                <a-table
+                  :columns="requestTableColumns"
+                  :data="headers"
+                >
+                  <template #param="{ rowIndex }">
+                    <a-input v-model="headers[rowIndex].param" />
+                  </template>
+                  <template #type="{ rowIndex }">
+                    <a-select v-model="headers[rowIndex].type">
+                      <a-option v-for="type of cookiesAndHeaderType" :value="type">{{type}}</a-option>
+                    </a-select>
+                  </template>
                   <template #required="{ rowIndex }">
                     <a-select v-model="headers[rowIndex].required" @change="">
                       <a-option v-for="value of [true,false]">{{value}}</a-option>
                     </a-select>
                   </template>
                   <template #defaultparam="{ rowIndex }">
-                    <a-input v-model="cookies[rowIndex].defaultparam" />
-                  </template> 
+                    <a-input v-model="headers[rowIndex].defaultparam" />
+                  </template>
+                  <template #description="{ rowIndex }">
+                    <a-input v-model="headers[rowIndex].description" />
+                  </template>
+                </a-table>
+              </a-tab-pane>
+              <a-tab-pane key="2" title="Response Body">
+                <codemirror :style="{ height: '200px'}"/>
+              </a-tab-pane>
+
+              <a-tab-pane key="3" title="Cookies">
+
+                <a-table
+                  :columns="requestTableColumns"
+                  :data="cookies"
+                  :pagination="false"
+                >
+                  <template #param="{ rowIndex }">
+                    <a-input v-model="cookies[rowIndex].param" />
+                  </template>
+                  <template #type="{ rowIndex }">
+                    <a-select v-model="cookies[rowIndex].type">
+                      <a-option v-for="type of cookiesAndHeaderType" :value="type">{{type}}</a-option>
+                    </a-select>
+                  </template>
+                  <template #required="{ rowIndex }">
+                    <a-select v-model="cookies[rowIndex].required" @change="">
+                      <a-option v-for="value of [true,false]">{{value}}</a-option>
+                    </a-select>
+                  </template>
                   <template #description="{ rowIndex }">
                     <a-input v-model="cookies[rowIndex].description" />
                   </template>
-                </a-table> 
-              </a-tab-pane>
-            </a-tabs>                 
-          </div>
-          
-          <div class="items">
-            <h3>返回数据</h3>
-            <a-tabs default-active-key="1">
-              <!-- <template #extra>
-                <a-button shape="round" type="primary">Add</a-button>
-              </template> -->
-              <a-tab-pane key="1" title="Request Headers">
-                <a-table 
-                  :columns="columns"
-                  :data="responseHeaders" 
-                >
-                </a-table>
-              </a-tab-pane>
-              <a-tab-pane key="2" title="Request Body">
-                <a-textarea></a-textarea>
-              </a-tab-pane>
-
-              <a-tab-pane key="3" title="Example">
-                <a-table 
-                  :columns="columns"
-                  :data="example" 
-                >                 
                 </a-table>
               </a-tab-pane>
             </a-tabs>
-          </div> 
+          </div>
         </div>
       </div>
     </a-tab-pane>
 
     <a-tab-pane key="2" title="swagger导入">
       <a-space>
-        <a-upload 
+        <a-upload
         draggable
         action=""
         />
@@ -184,7 +239,26 @@
 
 <script setup lang="ts">
   import { reactive } from 'vue';
-  const columns = reactive([{
+  import { Codemirror } from "vue-codemirror";
+  const requestTableColumns = reactive([{
+    title: "参数",
+    dataIndex: "param",
+    slotName:"param",
+  },{
+    title: "类型",
+    dataIndex: "type",
+    slotName: "type",
+  },{
+    title: "必选",
+    dataIndex: "required",
+    slotName: "required",
+  },{
+    title: "说明",
+    dataIndex: "description",
+    slotName: "description",
+  },]);
+
+  const responseTableColumns = reactive([{
     title: "参数",
     dataIndex: "param",
     slotName:"param",
@@ -210,21 +284,38 @@
     slotName: "operate",
   }]);
 
+
+  const bodyFormDataType = [
+    'string',
+    'integer',
+    'number',
+    'file',
+    'array',
+  ];
+
+  const cookiesAndHeaderType = [
+    'string',
+    'integer',
+    'number',
+    'array',
+  ]
+
   const headers = reactive([{
       key:'1',
       param:'',
       type:'string',
       required:'true',
-      defaultparam:'',  
+      defaultparam:'',
       description:''
     }
   ]);
+
   const cookies = reactive([{
       key:'1',
       param:'',
       type:'string',
       required:'true',
-      defaultparam:'',  
+      defaultparam:'',
       description:''
     }
   ]);
@@ -233,7 +324,7 @@
       param:'',
       type:'string',
       required:'true',
-      defaultparam:'',  
+      defaultparam:'',
       description:''
     }
   ]);
@@ -243,7 +334,7 @@
       param:'',
       type:'string',
       required:'true',
-      defaultparam:'',  
+      defaultparam:'',
       description:''
     }
   ]);
@@ -253,11 +344,11 @@
     param:'',
     type:'string',
     required:'false',
-    defaultparam:'',  
+    defaultparam:'',
     description:''
   }]);
 
-  const data = reactive({
+  const interfaceData = reactive({
     method: "cupidatat voluptate adipisicing culpa elit",
     url: "http://akcshcitf.se/puwwidnto",
     name: "引和世研真",
@@ -272,19 +363,26 @@
     response_data: {},
     created_by: 1
   });
-    
+
     const onSuccess = () => {
 
     }
 </script>
 
 <style scoped lang="less">
+/deep/.arco-textarea{
+  height: 200px !important;
+  resize: none;
+}
   .interface-data{
-    margin: 0 100px;
+    margin: 16px 100px;
   }
   .items{
     width: 800px;
     margin: 0 auto;
+    /deep/.arco-tabs-content{
+      padding: 16px;
+    }
   }
 </style>
 

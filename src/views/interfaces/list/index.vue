@@ -40,6 +40,7 @@
           v-for="i in 20"
           :key="i"
           @onHandleCheckInterface="onHandleCheckInterface"
+          @onHandleCheckProject="onHandleCheckProject"
         />
       </a-grid>
       <div class="footer">
@@ -54,10 +55,14 @@
       title="查看接口"
       :visible="checkInterfaceModalVisible"
       @cancel="onHandleCancelCheckInterface"
+      :mask-closable="false"
       fullscreen
       :modal-style="customModalStyle.modalStyle"
       :body-style="customModalStyle.bodyStyle"
       :mask-style="customModalStyle.maskStyle"
+      :esc-to-close="false"
+      :footer="false"
+      :unmount-on-close="true"
     >
       <check-interface/>
     </a-modal>
@@ -67,11 +72,26 @@
       :visible="createInterfaceModalVisible"
       @cancel="onHandleCancelCreateInterface"
       fullscreen
+      :esc-to-close="false"
       :modal-style="customModalStyle.modalStyle"
       :body-style="customModalStyle.bodyStyle"
       :mask-style="customModalStyle.maskStyle"
+      :unmount-on-close="true"
     >
       <create-interface/>
+    </a-modal>
+    <a-modal
+      :visible="checkProjectModalVisible"
+      fullscreen
+      :closable="false"
+      :footer="false"
+      :modal-style="customModalStyle.modalStyle"
+      :body-style="customModalStyle.bodyStyle"
+      :mask-style="customModalStyle.maskStyle"
+      unmount-on-close
+      :unmount-on-close="true"
+    >
+      <ProjectInfo @onHandleCloseModal="onHandleCancelCheckProject"/>
     </a-modal>
   </div>
 </template>
@@ -79,6 +99,7 @@
 <script setup lang="ts">
   import { IconPlus, IconDown } from "@arco-design/web-vue/es/icon";
   import InterfaceItem from "@/views/interfaces/list/components/interface-item.vue";
+  import ProjectInfo from "@/views/projects/list/components/projectInfo.vue";
   import { ref } from "vue";
   import createInterface from '@/components/create-interface/index.vue';
   import checkInterface from '@/components/check-interface/index.vue';
@@ -99,12 +120,18 @@
 
   let createInterfaceModalVisible = ref(false);
   let checkInterfaceModalVisible = ref(false);
+  let checkProjectModalVisible = ref(false);
+  const onHandleCheckProject = () => {
+    checkProjectModalVisible.value = true;
+  }
+  const onHandleCheckInterface = (data: any) => {
+    checkInterfaceModalVisible.value = true;
+  }
   const onHandleCreateInterface = () => {
     createInterfaceModalVisible.value = true;
   }
-  const onHandleCheckInterface = (data: any) => {
-    console.log(data);
-    checkInterfaceModalVisible.value = true;
+  const onHandleCancelCheckProject = (data: any) => {
+    checkProjectModalVisible.value = false;
   }
   const onHandleCancelCreateInterface = () => {
     createInterfaceModalVisible.value = false;
