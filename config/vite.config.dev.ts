@@ -7,6 +7,10 @@ export default mergeConfig(
     server: {
       open: true,
       port: 5678,
+      proxy: {
+        '/api': '47.99.45.81:3000',
+        rewrite: (path: any) => path.replace(/^\/api/, ''),
+      },
       fs: {
         strict: true,
       },

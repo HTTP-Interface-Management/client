@@ -29,7 +29,7 @@
             <b>创建时间：</b>2023年8月8日
           </div>
           <div class="belong-project">
-            <b>所属项目：</b>测试项目
+            <b>所属项目：</b><a-link @click.stop="onHandleCheckProject">测试项目</a-link>
           </div>
         </div>
       </div>
@@ -39,10 +39,14 @@
 
 <script setup lang="ts">
 
-const emitter = defineEmits(['onHandleCheckInterface']);
+const emitter = defineEmits(['onHandleCheckInterface', 'onHandleCheckProject']);
 
 const onHandleCheckInterface = () => {
   emitter('onHandleCheckInterface', 666)
+}
+
+const onHandleCheckProject = () => {
+  emitter('onHandleCheckProject', 666)
 }
 
 </script>
