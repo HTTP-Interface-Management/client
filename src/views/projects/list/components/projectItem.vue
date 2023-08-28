@@ -2,7 +2,7 @@
   <a-grid-item class="project-item" @click="onHandelModalVisible">
     <div class="left">
       <div class="project-img">
-        <img src="https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/0265a04fddbd77a19602a15d9d55d797.png~tplv-uwbnlip3yd-webp.webp" />
+        <img src="https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/24e0dd27418d2291b65db1b21aa62254.png~tplv-uwbnlip3yd-webp.webp" />
       </div>
       <div class="text-content">
         <div class="project-name">项目名称</div>

@@ -5,11 +5,14 @@ export default mergeConfig(
   {
     mode: 'development',
     server: {
-      open: true,
-      port: 5678,
+      origin: 'http://localhost',
+      port: 8080,
       proxy: {
-        '/api': '47.99.45.81:3000',
-        rewrite: (path: any) => path.replace(/^\/api/, ''),
+        '/api': {
+          target: 'http://47.99.45.81:3000',
+          changeOrigin: true,
+          rewrite: (path: any) => path.replace(/^\/api/, ''),
+        },
       },
       fs: {
         strict: true,

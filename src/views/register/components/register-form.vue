@@ -89,6 +89,7 @@
   import { useUserStore } from '@/store';
   import useLoading from '@/hooks/loading';
   import type { RegisterData } from '@/api/user';
+  import { LoginData } from "@/api/user";
 
   const router = useRouter();
   const { t } = useI18n();
@@ -116,10 +117,34 @@
     errors: Record<string, ValidatedError> | undefined;
     values: Record<string, any>;
   }) => {
+    if (userInfo.password !== userInfo.confirmPassword){
+      Message.warning({
+        content: '两次密码输入不一致',
+        duration: 5 * 1000
+      });
+      return;
+    }
     if (loading.value) return;
     if (!errors) {
       setLoading(true);
-      router.push('/login')
+      try {
+        const res = await userStore.register({
+          username: userInfo.username,
+          password: userInfo.password
+        });
+        if (res.code === 200 ) {
+          userInfo.username = '';
+          userInfo.password = '';
+          userInfo.confirmPassword = '';
+        }
+        // Message.success(t('login.form.login.success'));
+      } catch (err) {
+        errorMessage.value = (err as Error).message;
+        userInfo.username = '';
+        userInfo.password = '';
+      } finally {
+        setLoading(false);
+      }
     }
   };
   const setAcceptAgreement = (value: boolean) => {
