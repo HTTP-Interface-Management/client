@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import {
   login as userLogin,
+  register as userRegister,
   logout as userLogout,
   getUserInfo,
   LoginData,
@@ -10,24 +11,13 @@ import { removeRouteListener } from '@/utils/route-listener';
 import { UserState } from './types';
 import useAppStore from '../app';
 
+const TOKEN_KEY = 'token';
+const USER_INFO_KEY = 'user_info';
+
 const useUserStore = defineStore('user', {
   state: (): UserState => ({
-    name: undefined,
-    avatar: undefined,
-    job: undefined,
-    organization: undefined,
-    location: undefined,
-    email: undefined,
-    introduction: undefined,
-    personalWebsite: undefined,
-    jobName: undefined,
-    organizationName: undefined,
-    locationName: undefined,
-    phone: undefined,
-    registrationDate: undefined,
-    accountId: undefined,
-    certification: undefined,
-    role: '',
+    user_info: JSON.parse(localStorage.getItem(USER_INFO_KEY) as any),
+    token: localStorage.getItem(TOKEN_KEY) as any
   }),
 
   getters: {
@@ -37,12 +27,6 @@ const useUserStore = defineStore('user', {
   },
 
   actions: {
-    switchRoles() {
-      return new Promise((resolve) => {
-        this.role = this.role === 'user' ? 'admin' : 'user';
-        resolve(this.role);
-      });
-    },
     // Set user's information
     setInfo(partial: Partial<UserState>) {
       this.$patch(partial);
@@ -55,16 +39,24 @@ const useUserStore = defineStore('user', {
 
     // Get user's information
     async info() {
-      const res = await getUserInfo();
+      // const res = await getUserInfo();
+      //
+      // this.setInfo(res.data);
+    },
 
-      this.setInfo(res.data);
+    // Register
+    async register(loginForm: LoginData) {
+        return await userRegister(loginForm);
     },
 
     // Login
     async login(loginForm: LoginData) {
       try {
         const res = await userLogin(loginForm);
-        setToken(res.data.token);
+        setToken(res.data.token, {
+          user_id: res.data.user_id,
+          username: loginForm.username
+        });
       } catch (err) {
         clearToken();
         throw err;
@@ -79,11 +71,8 @@ const useUserStore = defineStore('user', {
     },
     // Logout
     async logout() {
-      try {
-        await userLogout();
-      } finally {
-        this.logoutCallBack();
-      }
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_INFO_KEY);
     },
   },
 });
