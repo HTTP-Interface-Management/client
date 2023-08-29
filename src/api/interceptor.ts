@@ -40,14 +40,9 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   (response: AxiosResponse<HttpResponse>) => {
     const res = response.data;
-    if (res.errno !== 0){
+    if (res.errno !== 0) {
       Message.warning({
         content: res.message || '发生错误',
-        duration: 5 * 1000,
-      });
-    } else {
-      Message.success({
-        content: res.message || '操作成功',
         duration: 5 * 1000,
       });
     }

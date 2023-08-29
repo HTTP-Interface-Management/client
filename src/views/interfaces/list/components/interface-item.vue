@@ -10,26 +10,29 @@
           <div class="theme">
             <a-avatar :size="16" :style="{background: 'green'}"/>
           </div>
-          <div class="title">测试接口</div>
+          <div class="title">{{interfaceData.name}}</div>
         </div>
         <div class="card-bottom">
           <a-tooltip
             class="interface-address"
-            content="https://123.456.789.100:8080/api/helloWorld"
+            :content="interfaceData.url"
             position="bottom"
           >
             <div class="address-cover">
-              <b>接口地址：</b>/api/helloWorld
+              <b>接口地址：</b>{{interfaceData.url}}
             </div>
           </a-tooltip>
-          <div class="creator">
-            <b>创建人：</b>用户名
-          </div>
           <div class="created-time">
-            <b>创建时间：</b>2023年8月8日
+            <b>创建时间：</b>{{interfaceData.created_at.substring(0, 11)}}
           </div>
           <div class="belong-project">
-            <b>所属项目：</b><a-link @click.stop="onHandleCheckProject">测试项目</a-link>
+            <a-button
+              long
+              type="text"
+              @click.stop="onHandleCheckProject"
+            >
+              查看项目
+            </a-button>
           </div>
         </div>
       </div>
@@ -49,6 +52,10 @@ const onHandleCheckProject = () => {
   emitter('onHandleCheckProject', 666)
 }
 
+const props = defineProps(['interfaceData']);
+
+
+console.log();
 </script>
 
 <style scoped lang="less">
@@ -74,7 +81,17 @@ const onHandleCheckProject = () => {
     .card-bottom{
       margin-top: 32px;
       .interface-address{
+        width: 100%;
+        display: flex;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         .address-cover{
+          width: 100%;
+          display: flex;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
       .creator{
@@ -84,7 +101,7 @@ const onHandleCheckProject = () => {
         padding-top: 8px;
       }
       .belong-project{
-        padding-top: 8px;
+        padding-top: 16px;
       }
     }
   }

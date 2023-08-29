@@ -148,48 +148,6 @@
           <div class="mock-header">
 
             <a-table
-              :columns="bodyFormDataColumns"
-              :data="mockData.request_params.body['form-data']"
-              row-key=""
-            >
-              <template #columns>
-                <a-table-column
-                  title="名称"
-                  data-index="name"
-                />
-                <a-table-column
-                  title="值"
-                  data-index="value"
-                  allow-clear
-                >
-                  <template #cell="{ record }">
-                    <a-input
-                      v-model="record.value"
-                      :style="{width: '100px'}"
-                      @input="onRecordValueChange"
-                    />
-                  </template>
-                </a-table-column>
-                <a-table-column
-                  title="类型"
-                  data-index="type"
-                />
-                <a-table-column
-                  title="是否必填"
-                  data-index="require"
-                />
-                <a-table-column
-                  title="说明"
-                  data-index="description"
-                />
-              </template>
-            </a-table>
-          </div>
-        </a-tab-pane>
-        <a-tab-pane title="Cookies" key="Cookies">
-          <div class="mock-cookies">
-            <a-table
-              :columns="bodyFormDataColumns"
               :data="mockData.request_params.body['form-data']"
               row-key=""
             >
@@ -274,12 +232,6 @@
           <a-tab-pane key="2" title="Response Body">
             <codemirror :style="{ height: '200px'}"/>
           </a-tab-pane>
-          <a-tab-pane key="3" title="Cookies">
-            <a-table
-              :columns="cookiesAndHeaderColumns"
-              :data="mockData.request_params.cookies"
-            />
-          </a-tab-pane>
         </a-tabs>
         <a-empty
           :description="`请求发送失败，错误码${500}`"
@@ -301,6 +253,7 @@
   import { onMounted, reactive, ref } from "vue";
   import Mock from "mockjs";
   import { Codemirror } from "vue-codemirror";
+  import axios from "axios";
 
   const props = defineProps(['interfaceData']);
   const interfaceData = props.interfaceData;
@@ -416,6 +369,14 @@
       return Random.boolean();
     }
   }
+
+
+  const startMock = () => {
+    axios({
+      method: mockData.method,
+      url:''
+    })
+  }
 </script>
 
 <style scoped lang="less">
@@ -466,6 +427,7 @@
       }
 
       .bottom-btn{
+        padding: 0 16px;
         margin-top: 32px;
         button{
           margin-top: 16px;
