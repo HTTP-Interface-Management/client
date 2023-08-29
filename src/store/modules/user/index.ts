@@ -59,7 +59,7 @@ const useUserStore = defineStore('user', {
         });
       } catch (err) {
         clearToken();
-        throw err;
+        throw new Error('登陆失败');
       }
     },
     logoutCallBack() {

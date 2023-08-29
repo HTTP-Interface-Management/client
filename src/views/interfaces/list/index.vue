@@ -37,10 +37,10 @@
         :row-gap="16"
       >
         <interface-item
-          v-for="i in 20"
-          :key="i"
-          @onHandleCheckInterface="onHandleCheckInterface"
+          v-for="i in interfaceList"
+          @onHandleCheckInterface="onHandleCheckInterface(i)"
           @onHandleCheckProject="onHandleCheckProject"
+          :interface-data="i"
         />
       </a-grid>
       <div class="footer">
@@ -64,7 +64,10 @@
       :footer="false"
       :unmount-on-close="true"
     >
-      <check-interface/>
+      <check-interface
+        :interfaceData="currentCheckInterfaceData"
+        @onCheckProjectAuthFailed="onCheckProjectAuthFailed"
+      />
     </a-modal>
     <a-modal
       class="create-interface-modal"
@@ -77,6 +80,7 @@
       :body-style="customModalStyle.bodyStyle"
       :mask-style="customModalStyle.maskStyle"
       :unmount-on-close="true"
+      :footer="false"
     >
       <create-interface/>
     </a-modal>
@@ -100,9 +104,11 @@
   import { IconPlus, IconDown } from "@arco-design/web-vue/es/icon";
   import InterfaceItem from "@/views/interfaces/list/components/interface-item.vue";
   import ProjectInfo from "@/views/projects/list/components/projectInfo.vue";
-  import { ref } from "vue";
+  import { onMounted, reactive, ref } from "vue";
   import createInterface from '@/components/create-interface/index.vue';
   import checkInterface from '@/components/check-interface/index.vue';
+  import { queryAllInterfaces } from "@/api/interface";
+  import { Message, Modal } from "@arco-design/web-vue";
 
 
   const customModalStyle = {
@@ -118,13 +124,24 @@
     }
   }
 
+  let interfaceList = ref([]);
+
+  onMounted(async () => {
+    interfaceList.value = (await queryAllInterfaces({})).data;
+    console.log(interfaceList.value);
+  });
+
+  //当前查看的接口数据
+  const currentCheckInterfaceData = ref();
+
   let createInterfaceModalVisible = ref(false);
   let checkInterfaceModalVisible = ref(false);
   let checkProjectModalVisible = ref(false);
   const onHandleCheckProject = () => {
     checkProjectModalVisible.value = true;
   }
-  const onHandleCheckInterface = (data: any) => {
+  const onHandleCheckInterface = (interfaceData: any) => {
+    currentCheckInterfaceData.value = interfaceData;
     checkInterfaceModalVisible.value = true;
   }
   const onHandleCreateInterface = () => {
@@ -138,6 +155,13 @@
   }
   const onHandleCancelCheckInterface = () => {
     checkInterfaceModalVisible.value = false;
+  }
+
+  const onCheckProjectAuthFailed = () => {
+    checkInterfaceModalVisible.value = false;
+    Modal.error({
+      content: '暂无权限访问此项目'
+    })
   }
 
 </script>

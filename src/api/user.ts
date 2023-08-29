@@ -36,3 +36,12 @@ export function getUserInfo() {
 export function getMenuList() {
   return axios.post<RouteRecordNormalized[]>('/api/user/menu');
 }
+
+export function getProjectList(user_id: any){
+  return axios({
+    url: '/api/users/projectList',
+    params:{
+      user_id: user_id
+    }
+  });
+}

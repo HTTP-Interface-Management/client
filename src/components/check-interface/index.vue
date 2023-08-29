@@ -3,31 +3,48 @@
     <div class="interface-data">
       <div class="items">
         <h3>接口名称</h3>
-        <a-input v-model="interfaceInfo.name"></a-input>
+        <a-input v-model= "interfaceData.name" />
       </div>
       <div class="items">
         <h3>所属项目集</h3>
-        <span class="interface-directory">
-          项目1 /
-          <a-input v-model="interfaceInfo.catalogName"/>
-        </span>
+        <a-select
+          :style="{width:'320px'}"
+          placeholder="选择所属项目"
+          disabled
+          v-model="interfaceData.project_id"
+        >
+          <a-option
+            v-for="i in myProjectList"
+            :value="i.project_id"
+          >
+            {{ currentProjectName }}
+          </a-option>
+        </a-select>
+        / <a-select
+        :style="{width:'320px'}"
+        placeholder="选择所属接口集"
+        allow-create
+        v-model="interfaceData.catalog_name"
+      />
       </div>
       <div class="items">
         <h3>版本号</h3>
-        <span>1</span>
+        <div>{{interfaceData.version_id}}</div>
       </div>
       <div class="items">
         <h3>接口功能描述</h3>
-        <a-input v-model="interfaceInfo.description"></a-input>
+        <a-input v-model= "interfaceData.description"/>
       </div>
       <div class="items">
         <h3>接口地址（URL）</h3>
-        <a-input v-model="interfaceInfo.url"></a-input>
+        <a-input v-model="interfaceData.url"/>
       </div>
-
       <div class="items">
         <h3>HTTP请求方式</h3>
-        <a-select :defaultValue="interfaceInfo.method" placeholder="选择请求方法" v-model="interfaceInfo.method">
+        <a-select
+          placeholder="选择请求方法"
+          v-model="interfaceData.method"
+        >
           <a-option
             v-for="i in methodsList"
             :key="i.name"
@@ -37,136 +54,259 @@
           </a-option>
         </a-select>
       </div>
-
       <div class="items">
         <h3>请求参数</h3>
         <a-tabs default-active-key="1" type="card">
-          <a-tab-pane title="Request Headers" key="1">
+          <a-tab-pane
+            key="1"
+            title="Request Headers"
+          >
+            <a-button
+              :style="{ marginBottom: '16px' }"
+              @click="addRequestHeaderParam"
+            >
+              添加
+            </a-button>
             <a-table
-              :columns="requestTableColumns"
-              :data="interfaceInfo.request_params.header"
+              :data="requestHeader"
               :pagination="false"
             >
-              <template #name="{ rowIndex }">
-                <a-input v-model="interfaceInfo.request_params.header[rowIndex].name" />
-              </template>
-              <template #type="{ rowIndex }">
-                <a-input v-model="interfaceInfo.request_params.header[rowIndex].type" />
-              </template>
-              <template #require="{ rowIndex }">
-                <a-select v-model="interfaceInfo.request_params.header[rowIndex].require" @change="">
-                  <a-option v-for="value of [true,false]">{{value}}</a-option>
-                </a-select>
-              </template>
-              <template #defaultparam="{ rowIndex }">
-                <a-input v-model="interfaceInfo.request_params.header[rowIndex].defaultparam" />
-              </template>
-              <template #description="{ rowIndex }">
-                <a-input v-model="interfaceInfo.request_params.header[rowIndex].description" />
+              <template #columns>
+                <a-table-column title="参数名" data-index="name">
+                  <template #cell="{ record }">
+                    <a-input v-model="record.name"/>
+                  </template>
+                </a-table-column>
+                <a-table-column title="类型" data-index="type">
+                  <template #cell="{ record }">
+                    <a-select v-model="record.type">
+                      <a-option v-for="type of HeaderAndParamsType" :value="type">{{type}}</a-option>
+                    </a-select>
+                  </template>
+                </a-table-column>
+                <a-table-column title="是否必选" data-index="required">
+                  <template #cell="{ record }">
+                    <a-select v-model="record.required">
+                      <a-option v-for="value of [true,false]">{{value}}</a-option>
+                    </a-select>
+                  </template>
+                </a-table-column>
+                <a-table-column title="说明" data-index="description">
+                  <template #cell="{ record }">
+                    <a-input :style="{ width: '200px' }" v-model="record.description"/>
+                  </template>
+                </a-table-column>
+                <a-table-column title="操作">
+                  <template #cell="{ record }">
+                    <a-button @click="deleteRequestHeaderParam(record)">删除</a-button>
+                  </template>
+                </a-table-column>
               </template>
             </a-table>
           </a-tab-pane>
-          <a-tab-pane title="Request Body" key="2">
-            <a-tabs default-active-key="2">
-              <a-tab-pane key="1" title="none">
-                <a-empty description="暂未设置Body"/>
+          <a-tab-pane
+            title="Params"
+            key="2"
+          >
+            <div class="mock-params">
+              <div class="params-title">Query参数</div>
+              <a-button
+                :style="{ marginBottom: '16px' }"
+                @click="addRequestParam('query')"
+              >添加</a-button>
+              <a-table
+                :data="requestParams.query"
+                :pagination="false"
+              >
+                <template #columns>
+                  <a-table-column title="参数名" data-index="name">
+                    <template #cell="{ record }">
+                      <a-input v-model="record.name"/>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="类型" data-index="type">
+                    <template #cell="{ record }">
+                      <a-select v-model="record.type">
+                        <a-option v-for="type of HeaderAndParamsType" :value="type">{{type}}</a-option>
+                      </a-select>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="是否必选" data-index="required">
+                    <template #cell="{ record }">
+                      <a-select v-model="record.required">
+                        <a-option v-for="value of [true,false]">{{value}}</a-option>
+                      </a-select>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="说明" data-index="description">
+                    <template #cell="{ record }">
+                      <a-input :style="{ width: '200px' }" v-model="record.description"/>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="操作">
+                    <template #cell="{ record }">
+                      <a-button @click="deleteRequestParam(record, 'query')">删除</a-button>
+                    </template>
+                  </a-table-column>
+                </template>
+              </a-table>
+              <div class="params-title" :style="{ marginTop: '16px' }">动态参数</div>
+              <a-button
+                :style="{ marginBottom: '16px' }"
+                @click="addRequestParam('path')"
+              >
+                添加
+              </a-button>
+              <a-table
+                :data="requestParams.path"
+                :pagination="false"
+              >
+                <template #columns>
+                  <a-table-column title="参数名" data-index="name">
+                    <template #cell="{ record }">
+                      <a-input v-model="record.name"/>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="类型" data-index="type">
+                    <template #cell="{ record }">
+                      <a-select v-model="record.type">
+                        <a-option v-for="type of HeaderAndParamsType" :value="type">{{type}}</a-option>
+                      </a-select>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="是否必选" data-index="required">
+                    <template #cell="{ record }">
+                      <a-select v-model="record.required">
+                        <a-option v-for="value of [true,false]">{{value}}</a-option>
+                      </a-select>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="说明" data-index="description">
+                    <template #cell="{ record }">
+                      <a-input :style="{ width: '200px' }" v-model="record.description"/>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="操作">
+                    <template #cell="{ record }">
+                      <a-button @click="deleteRequestParam(record, 'path')">删除</a-button>
+                    </template>
+                  </a-table-column>
+                </template>
+              </a-table>
+            </div>
+          </a-tab-pane>
+
+          <a-tab-pane key="3" title="Request Body">
+            <a-tabs default-active-key="none" @change="onBodyFormatChange">
+              <a-tab-pane key="none" title="none">
+                <a-empty description="未设置Body"/>
               </a-tab-pane>
-              <a-tab-pane key="2" title="form-data">
-                <a-table
-                  :columns="requestTableColumns"
-                  :data="interfaceInfo.request_params.body['form-data']"
+              <a-tab-pane key="form-data" title="form-data">
+                <a-button
+                  :style="{ marginBottom: '16px' }"
+                  @click="addRequestBodyFormData"
                 >
-                  <template #name="{ rowIndex }">
-                    <a-input v-model="interfaceInfo.request_params.body['form-data'][rowIndex].name" />
-                  </template>
-                  <template #type="{ rowIndex }">
-                    <a-input v-model="interfaceInfo.request_params.body['form-data'][rowIndex].type" />
-                  </template>
-                  <template #require="{ rowIndex }">
-                    <a-input v-model="interfaceInfo.request_params.body['form-data'][rowIndex].require" />
-                  </template>
-                  <template #description="{ rowIndex }">
-                    <a-input v-model="interfaceInfo.request_params.body['form-data'][rowIndex].description" />
+                  添加
+                </a-button>
+                <a-table
+                  :data="requestBody['form-data']"
+                  :pagination="false"
+                >
+                  <template #columns>
+                    <a-table-column title="参数名" data-index="name">
+                      <template #cell="{ record }">
+                        <a-input v-model="record.name"/>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="类型" data-index="type">
+                      <template #cell="{ record }">
+                        <a-select v-model="record.type">
+                          <a-option v-for="type of bodyFormDataType" :value="type">{{type}}</a-option>
+                        </a-select>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="是否必选" data-index="required">
+                      <template #cell="{ record }">
+                        <a-select v-model="record.required">
+                          <a-option v-for="value of [true,false]">{{value}}</a-option>
+                        </a-select>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="说明" data-index="description">
+                      <template #cell="{ record }">
+                        <a-input :style="{ width: '200px' }" v-model="record.description"/>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="操作">
+                      <template #cell="{ record }">
+                        <a-button @click="deleteRequestBodyFormData(record)">删除</a-button>
+                      </template>
+                    </a-table-column>
                   </template>
                 </a-table>
               </a-tab-pane>
-              <a-tab-pane key="3" title="json">
-                <codemirror :style="{ height: '200px'}"/>
+              <a-tab-pane key="json" title="json">
+                <codemirror :style="{ height: '200px'}" v-model="requestBody['json']"/>
               </a-tab-pane>
-              <a-tab-pane key="4" title="xml">
-                <codemirror :style="{ height: '200px'}"/>
+              <a-tab-pane key="xml" title="xml">
+                <codemirror :style="{ height: '200px'}" v-model="requestBody['xml']"/>
               </a-tab-pane>
-              <a-tab-pane key="5" title="yaml">
-                <codemirror :style="{ height: '200px'}"/>
+              <a-tab-pane key="yaml" title="yaml" >
+                <codemirror :style="{ height: '200px'}" v-model="requestBody['yaml']"/>
               </a-tab-pane>
             </a-tabs>
           </a-tab-pane>
-          <a-tab-pane title="Cookies" key="3">
-
-            <a-table
-              :columns="requestTableColumns"
-              :data="cookies"
-              :pagination="false"
-            >
-              <template #param="{ rowIndex }">
-                <a-input v-model="interfaceInfo.request_params.cookies[rowIndex].param" />
-              </template>
-              <template #type="{ rowIndex }">
-                <a-select v-model="interfaceInfo.request_params.cookies[rowIndex].type">
-                  <a-option v-for="type of cookiesAndHeaderType" :value="type">{{type}}</a-option>
-                </a-select>
-              </template>
-              <template #required="{ rowIndex }">
-                <a-select v-model="interfaceInfo.request_params.cookies[rowIndex].required" @change="">
-                  <a-option v-for="value of [true,false]">{{value}}</a-option>
-                </a-select>
-              </template>
-              <template #description="{ rowIndex }">
-                <a-input v-model="interfaceInfo.request_params.cookies[rowIndex].description" />
-              </template>
-            </a-table>
-          </a-tab-pane>
         </a-tabs>
       </div>
-
       <div class="items">
         <h3>返回数据</h3>
         <a-tabs default-active-key="1" type="card">
-          <a-tab-pane title="Response Headers" key="1">
-            <a-table
-              :columns="requestTableColumns"
-              :data="response"
+          <a-tab-pane key="1" title="Response Headers">
+            <a-button
+              :style="{ marginBottom: '16px' }"
+              @click="addResponseHeaderData"
             >
-              <template #param="{ rowIndex }">
-                <a-input v-model="headers[rowIndex].param" />
-              </template>
-              <template #type="{ rowIndex }">
-                <a-select v-model="headers[rowIndex].type">
-                  <a-option v-for="type of cookiesAndHeaderType" :value="type">{{type}}</a-option>
-                </a-select>
-              </template>
-              <template #required="{ rowIndex }">
-                <a-select v-model="headers[rowIndex].required" @change="">
-                  <a-option v-for="value of [true,false]">{{value}}</a-option>
-                </a-select>
-              </template>
-              <template #defaultparam="{ rowIndex }">
-                <a-input v-model="headers[rowIndex].defaultparam" />
-              </template>
-              <template #description="{ rowIndex }">
-                <a-input v-model="headers[rowIndex].description" />
+              添加
+            </a-button>
+            <a-table
+              :data="responseHeader"
+              :pagination="false"
+            >
+              <template #columns>
+                <a-table-column title="参数名" data-index="name">
+                  <template #cell="{ record }">
+                    <a-input v-model="record.name"/>
+                  </template>
+                </a-table-column>
+                <a-table-column title="类型" data-index="type">
+                  <template #cell="{ record }">
+                    <a-select v-model="record.type">
+                      <a-option v-for="type of HeaderAndParamsType" :value="type">{{type}}</a-option>
+                    </a-select>
+                  </template>
+                </a-table-column>
+                <a-table-column title="是否必选" data-index="required">
+                  <template #cell="{ record }">
+                    <a-select v-model="record.required">
+                      <a-option v-for="value of [true,false]">{{value}}</a-option>
+                    </a-select>
+                  </template>
+                </a-table-column>
+                <a-table-column title="说明" data-index="description">
+                  <template #cell="{ record }">
+                    <a-input :style="{ width: '200px' }" v-model="record.description"/>
+                  </template>
+                </a-table-column>
+                <a-table-column title="操作">
+                  <template #cell="{ record }">
+                    <a-button @click="deleteResponseHeaderData(record)">删除</a-button>
+                  </template>
+                </a-table-column>
               </template>
             </a-table>
           </a-tab-pane>
-          <a-tab-pane title="Response Body" key="2">
-            <codemirror :style="{ height: '200px'}" />
-          </a-tab-pane>
-          <a-tab-pane title="Cookies" key="3">
-            <a-table
-              :columns="responseTableColumns"
-              :data="response"
-              :pagination="false"
-            />
+          <a-tab-pane key="2" title="Response Body">
+            <codemirror :style="{ height: '200px'}" v-model="responseBody"/>
           </a-tab-pane>
         </a-tabs>
       </div>
@@ -197,325 +337,362 @@
           </a-list-item>
         </a-list>
       </div>
+      <div class="items">
+        <div class="bottom-btn">
+          <a-button
+            size="large"
+            type="primary"
+            status="success"
+            long
+            @click="onShowMockModal"
+          >
+            接口Mock
+          </a-button>
+          <a-button
+            type="primary"
+            size="large"
+            long
+            @click="onShowUpdateInterfaceModal"
+          >
+            保存修改
+          </a-button>
+          <a-button
+            type="primary"
+            size="large"
+            status="danger"
+            long
+            @click="onDeleteInterface"
+          >
+            删除接口
+          </a-button>
+        </div>
+      </div>
     </div>
-    <div class="bottom-btn">
-      <a-button
-        size="large"
-        type="primary"
-        status="success"
-        long
-        @click="onShowMockModal"
-      >
-        接口Mock
-      </a-button>
-      <a-button
-        type="primary"
-        size="large"
-        long
-        @click="onShowUpdateInterfaceModal"
-      >
-        保存修改
-      </a-button>
-      <a-button
-        type="primary"
-        size="large"
-        status="danger"
-        long
-        @click="onDeleteInterface"
-      >
-        删除接口
-      </a-button>
-    </div>
-    <a-modal
-      :visible="isMockModalShow"
-      @cancel="onCancelMockModal"
-      :modal-style="{
-        height: '80%',
-        width: '80%',
-        maxWidth: '800px'
-      }"
-      :body-style="{
-        height: 'calc(100% - 48px)',
-        overflowY: 'auto',
-      }"
-      title="接口Mock"
-      :footer="false"
-      hide-cancel
-      draggable
-      unmount-on-close
-      :mask-closable="false"
-    >
-      <mock-space :interface-data="interfaceInfo"/>
-    </a-modal>
-    <a-modal
-      :visible="isInterfaceHistoryModalShow"
-      @cancel="onCancelInterfaceHistoryModal"
-      unmount-on-close
-      width="auto"
-      :modal-style="{
-        height: '80%',
-      }"
-      :body-style="{
-        height: 'calc(100% - 48px)',
-        overflowY: 'auto',
-      }"
-      title="接口历史"
-      :footer="false"
-      hide-cancel
-      draggable
-    >
-      <interface-history/>
-    </a-modal>
-    <a-modal
-      title="接口修改说明"
-      :visible="isUpdateInterfaceModalShow"
-      @cancel="onCancelUpdateInterfaceModal"
-      unmount-on-close
-      class="commit-update-text"
-    >
-      <a-textarea
-        placeholder="请输入接口更新说明"
-      />
-    </a-modal>
   </div>
+  <a-modal
+    :visible="isMockModalShow"
+    @cancel="onCancelMockModal"
+    :modal-style="{
+    height: '80%',
+    width: '80%',
+    maxWidth: '800px'
+  }"
+    :body-style="{
+    height: 'calc(100% - 48px)',
+    overflowY: 'auto',
+  }"
+    title="接口Mock"
+    :footer="false"
+    hide-cancel
+    draggable
+    unmount-on-close
+    :mask-closable="false"
+  >
+    <mock-space :interface-data="interfaceData"/>
+  </a-modal>
+  <a-modal
+    :visible="isInterfaceHistoryModalShow"
+    @cancel="onCancelInterfaceHistoryModal"
+    unmount-on-close
+    width="auto"
+    :modal-style="{
+    height: '80%',
+  }"
+    :body-style="{
+    height: 'calc(100% - 48px)',
+    overflowY: 'auto',
+  }"
+    title="接口历史"
+    :footer="false"
+    hide-cancel
+    draggable
+  >
+    <interface-history/>
+  </a-modal>
+  <a-modal
+    title="接口修改说明"
+    :visible="isUpdateInterfaceModalShow"
+    @cancel="onCancelUpdateInterfaceModal"
+    unmount-on-close
+    class="commit-update-text"
+    @ok="onHandleUpdateInterface"
+  >
+    <a-textarea
+      placeholder="请输入接口更新说明"
+    />
+  </a-modal>
 </template>
 
 <script setup lang="ts">
-  import { reactive, ref } from "vue";
-  import MockSpace from "@/components/check-interface/mock-space.vue";
-  import { IconEye, IconPlus } from "@arco-design/web-vue/es/icon";
-  import InterfaceHistory from "@/components/check-interface/interface-history.vue";
-  import { Modal } from "@arco-design/web-vue";
-  import { Codemirror } from "vue-codemirror";
+import { onMounted, reactive, ref } from "vue";
+import { Codemirror } from "vue-codemirror";
+import { getProjectList } from "@/api/user";
+import { useUserStore } from "@/store";
+import { Modal } from "@arco-design/web-vue";
+import { IconEye } from "@arco-design/web-vue/es/icon";
+import MockSpace from "@/components/check-interface/mock-space.vue";
+import InterfaceHistory from "@/components/check-interface/interface-history.vue";
+import { updateInterfaces } from "@/api/interface";
 
-  const isUpdateInterfaceModalShow = ref(false);
-  const onShowUpdateInterfaceModal = () => {
-    isUpdateInterfaceModalShow.value = true
+const methodsList = [
+  {name: 'GET', value: 'GET'},
+  {name: 'POST', value: 'POST'},
+  {name: 'OPTIONS', value: 'OPTIONS'},
+  {name: 'PUT', value: 'PUT'},
+  {name: 'DELETE', value: 'DELETE'},
+  {name: 'HEAD', value: 'HEAD'},
+  {name: 'CONNECT', value: 'CONNECT'},
+  {name: 'TRACE', value: 'TRACE'},
+  {name: 'PATCH', value: 'PATCH'},
+];
+
+const bodyFormDataType = [
+  'string',
+  'integer',
+  'number',
+  'file',
+  'array',
+];
+
+const HeaderAndParamsType = [
+  'string',
+  'integer',
+  'number',
+  'array',
+]
+
+let requestHeader = reactive([]);
+
+const requestBody = reactive({
+  'form-data': [],
+  'json': '',
+  'yaml': '',
+  'xml': ''
+});
+
+const requestParams = reactive({
+  'query': [],
+  'path': []
+})
+
+// body 格式
+const currentSelectFormat = ref();
+const onBodyFormatChange = (key: string | number) => {
+  currentSelectFormat.value = key;
+}
+
+const responseHeader = reactive([]);
+
+const responseBody = ref(null);
+
+const props = defineProps(['interfaceData']);
+
+const currentProjectName = ref();
+
+const emiter = defineEmits(['onCheckProjectAuthFailed']);
+
+// 载入已有的项目列表(若该接口在自己的项目中不存在则关闭窗口)
+let myProjectList = ref();
+onMounted(async () => {
+  myProjectList.value = (await getProjectList(useUserStore().user_info.user_id as any)).data;
+
+  for (let i of myProjectList.value){
+    if (i.project_id === props.interfaceData.project_id){
+      currentProjectName.value = i.description;
+    }
   }
-  const onCancelUpdateInterfaceModal = () => {
-    isUpdateInterfaceModalShow.value = false
+
+  if (!currentProjectName.value){
+    emiter('onCheckProjectAuthFailed', false);
   }
 
-  const onDeleteInterface = () => {
-    Modal.error({
-      title: '警告',
-      content: '确定要删除该接口吗？',
-      cancelText: '取消',
-      hideCancel: false
-    })
-  }
+});
 
-  const interfaceInfo = reactive({
-    name: '接口名称',
-    description: '获取二级分类',
-    url: 'http://testtapi.xuexiluxian.cn/api/course/category/getSecondCategorys',
-    method: 'GET',
-    interfaceId: '123',
-    projectId: '456',
-    versionId: '1',
-    catalogName: '集合1',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    request_params: {
-      params: {
-        path: [],
-        query: ''
-      },
-      cookies: null,
-      body: {
-        'form-data': [
-          {
-            name: 'name',
-            type: 'string',
-            require: false,
-            description: 'The name of the item',
-          },
-          {
-            name: 'sex',
-            type: 'string',
-            require: false,
-            description: 'The name of the item',
-          },
-          {
-            name: 'age',
-            type: 'string',
-            require: false,
-            description: 'The name of the item',
-          },
-        ],
-      },
-      header: null
-    },
-    response_data: {
 
-    },
-  });
-
-  const methodsList = [
-    {name: 'GET', value: 'GET'},
-    {name: 'POST', value: 'POST'},
-    {name: 'OPTIONS', value: 'OPTIONS'},
-    {name: 'PUT', value: 'PUT'},
-    {name: 'DELETE', value: 'DELETE'},
-    {name: 'HEAD', value: 'HEAD'},
-    {name: 'CONNECT', value: 'CONNECT'},
-    {name: 'TRACE', value: 'TRACE'},
-    {name: 'PATCH', value: 'PATCH'},
-  ];
-
-  const formatsList = [
-    {name: 'None', value: 'None'},
-    {name: 'FormData', value: 'FormData'},
-    {name: 'JSON', value: 'JSON'},
-    {name: 'XML', value: 'XML'},
-    {name: 'YAML', value: 'YAML'},
-    {name: 'RAW', value: 'RAW'},
-    {name: 'BINARY', value: 'BINARY'},
-  ];
-
-  const bodyFormDataType = [
-    'string',
-    'integer',
-    'number',
-    'file',
-    'array',
-  ];
-
-  const cookiesAndHeaderType = [
-    'string',
-    'integer',
-    'number',
-    'array',
-  ];
-
-  const requestTableColumns = [
-      {
-        title: '参数',
-        dataIndex: 'name',
-      },
-      {
-        title: '类型',
-        dataIndex: 'types',
-      },
-      {
-        title: '必选',
-        dataIndex: 'required',
-      },
-      {
-        title: '说明',
-        dataIndex: 'description',
-      },
-    ];
-  const responseTableColumns = [
-    {
-      title: '参数',
-      dataIndex: 'name',
-    },
-    {
-      title: '类型',
-      dataIndex: 'types',
-    },
-    {
-      title: '说明',
-      dataIndex: 'description',
-    },
-  ];
-
-  const request = reactive([{
-    key:'1',
-    param:'',
-    types:'string',
-    required:'false',
-    defaultparams:'',
-    illustrate:'',
-    label:''
-  }]);
-  const response = reactive([{
-    key:'1',
-    param:'',
-    types:'string',
-    required:'false',
-    defaultparams:'',
-    illustrate:''
-  }]);
-
-  const headers = reactive([{
-    key:'1',
-    param:'',
-    type:'string',
-    required:'true',
-    defaultparam:'',
+// 添加Request Header参数
+const addRequestHeaderParam = () => {
+  requestHeader.push({
+    name:'',
+    type:'',
+    required:'',
     description:''
-  }
-  ]);
+  } as never);
+}
 
-  const isInterfaceHistoryModalShow = ref(false);
-  const onShowInterfaceHistoryModal = () => {
-    isInterfaceHistoryModalShow.value = true
-  }
-  const onCancelInterfaceHistoryModal = () => {
-    isInterfaceHistoryModalShow.value = false
-  }
+// 删除Request Header参数
+const deleteRequestHeaderParam = (
+  currentRecord: { name: string; type: string; required: string; description: string; },
+) => {
+  requestHeader.map((value, index) => {
+    if (value.name === currentRecord.name && value.type === currentRecord.type && value.required === currentRecord.required && value.description === currentRecord.description)
+      requestHeader.splice(index, 1);
+  })
+  console.log(requestHeader);
+}
 
-  const isMockModalShow = ref(false);
-  const onShowMockModal = () => {
-    isMockModalShow.value = true
+// 添加Request Param参数
+const addRequestParam = (type: string) => {
+  if (type === 'query'){
+    requestParams.query.push({
+      name:'',
+      type:'',
+      required:'',
+      description:''
+    } as never);
   }
-  const onCancelMockModal = () => {
-    isMockModalShow.value = false
+  else if (type === 'path'){
+    requestParams.path.push({
+      name:'',
+      type:'',
+      required:'',
+      description:''
+    } as never);
   }
+}
+
+// 删除Request Param参数
+const deleteRequestParam = (
+  currentRecord: { name: string; type: string; required: string; description: string; },
+  type: string
+) => {
+  if (type === 'query'){
+    requestParams.query.map((value, index) => {
+      if (value.name === currentRecord.name && value.type === currentRecord.type && value.required === currentRecord.required && value.description === currentRecord.description)
+        requestParams.query.splice(index, 1);
+    });
+  } else if (type === 'path'){
+    requestParams.path.map((value, index) => {
+      if (value.name === currentRecord.name && value.type === currentRecord.type && value.required === currentRecord.required && value.description === currentRecord.description)
+        requestParams.path.splice(index, 1);
+    });
+  }
+  console.log(requestHeader);
+}
+
+// 添加Request Body FormData参数
+const addRequestBodyFormData = () => {
+  requestBody['form-data'].push({
+    name:'',
+    type:'',
+    required:'',
+    description:''
+  } as never);
+}
+
+// 删除Request Body FormData参数
+const deleteRequestBodyFormData = (
+  currentRecord: { name: string; type: string; required: string; description: string; },
+) => {
+  requestBody['form-data'].map((value, index) => {
+    if (value.name === currentRecord.name && value.type === currentRecord.type && value.required === currentRecord.required && value.description === currentRecord.description)
+      requestBody['form-data'].splice(index, 1);
+  })
+  console.log(requestBody['form-data']);
+}
+
+// 添加Response Headers参数
+const addResponseHeaderData = () => {
+  responseHeader.push({
+    name:'',
+    type:'',
+    required:'',
+    description:''
+  } as never);
+}
+
+// 删除Response Headers参数
+const deleteResponseHeaderData = (
+  currentRecord: { name: string; type: string; required: string; description: string; },
+) => {
+  responseHeader.map((value, index) => {
+    if (value.name === currentRecord.name && value.type === currentRecord.type && value.required === currentRecord.required && value.description === currentRecord.description)
+      responseHeader.splice(index, 1);
+  })
+  console.log(responseHeader);
+}
+
+const isUpdateInterfaceModalShow = ref(false);
+const onShowUpdateInterfaceModal = () => {
+  isUpdateInterfaceModalShow.value = true
+}
+const onCancelUpdateInterfaceModal = () => {
+  isUpdateInterfaceModalShow.value = false
+}
+
+const onDeleteInterface = () => {
+  Modal.error({
+    title: '警告',
+    content: '确定要删除该接口吗？',
+    cancelText: '取消',
+    hideCancel: false
+  })
+}
+
+const isInterfaceHistoryModalShow = ref(false);
+const onShowInterfaceHistoryModal = () => {
+  isInterfaceHistoryModalShow.value = true
+}
+const onCancelInterfaceHistoryModal = () => {
+  isInterfaceHistoryModalShow.value = false
+}
+
+const isMockModalShow = ref(false);
+const onShowMockModal = () => {
+  isMockModalShow.value = true
+}
+const onCancelMockModal = () => {
+  isMockModalShow.value = false
+}
+
+// 更新接口
+const onHandleUpdateInterface = () => {
+}
+
 </script>
 
 <style scoped lang="less">
-  /deep/.arco-textarea{
-    height: 200px !important;
-    resize: none;
-  }
-  .check{
-    .interface-data{
-      margin: 0 100px;
-    }
-    .items{
-      width: 800px;
-      margin: 0 auto;
-      padding-bottom: 16px;
-      /deep/.arco-tabs-content{
-        padding: 16px;
-      }
-      .interface-directory{
-        display: flex;
-        align-items: center;
-        /deep/.arco-input-wrapper{
-          margin-left: 16px;
-          width: 200px;
-        }
-      }
-      h3{
-        font-weight: 600;
-        position: relative;
-        padding-left: 24px;
-        &::before{
-          content: "";
-          width: 12px;
-          border-radius: 2px;
-          height: 1em;
-          left: 0;
-          top: 50%;
-          transform: translate(0, -50%);
-          background: rgb(var(--primary-6));
-          position: absolute;
-        }
-      }
-    }
-
-    .bottom-btn{
-      width: 800px;
-      margin: 32px auto;
-      button{
-        margin-top: 16px;
-      }
+/deep/.arco-textarea{
+  height: 200px !important;
+  resize: none;
+}
+.interface-data{
+  margin: 16px 100px;
+}
+.items{
+  width: 800px;
+  margin: 0 auto;
+  h3{
+    font-weight: 600;
+    position: relative;
+    padding-left: 24px;
+    &::before{
+      content: "";
+      width: 12px;
+      border-radius: 2px;
+      height: 1em;
+      left: 0;
+      top: 50%;
+      transform: translate(0, -50%);
+      background: rgb(var(--primary-6));
+      position: absolute;
     }
   }
-
+  .bottom-btn{
+    margin-top: 16px;
+    button{
+      margin-top: 16px;
+    }
+  }
+  .params-title{
+    padding-bottom: 16px;
+    font-weight: 600;
+  }
+  /deep/.arco-tabs-content{
+    padding: 16px;
+  }
+  .create-btn{
+    margin-bottom: 16px;
+  }
+}
 </style>
 
