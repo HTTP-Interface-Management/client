@@ -11,20 +11,29 @@
           :style="{width:'320px'}"
           placeholder="选择所属项目"
           v-model="interfaceData.project_id"
+          v-if="!props.projectInfo"
         >
           <a-option
             v-for="i in myProjectList"
             :value="i.project_id"
           >
-            {{ i.description }}
+            {{ i.name }}
           </a-option>
         </a-select>
+        <span v-else> {{projectInfo.name}} </span>
         / <a-select
         :style="{width:'320px'}"
         placeholder="选择所属接口集"
         allow-create
         v-model="interfaceData.catalog_name"
-      />
+      >
+        <a-option
+          v-for="i in catalogList"
+          :value="i"
+        >
+          {{ i }}
+        </a-option>
+      </a-select>
       </div>
       <div class="items">
         <h3>接口功能描述</h3>
@@ -325,7 +334,11 @@ import { Codemirror } from "vue-codemirror";
 import { getProjectList } from "@/api/user";
 import { useUserStore } from "@/store";
 import {addInterface} from "@/api/interface";
+import { Message } from "@arco-design/web-vue";
 
+const props = defineProps(['projectInfo', 'catalogList']);
+const emits = defineEmits(['onFreshData', 'onClose']);
+console.log(props.catalogList);
 const methodsList = [
     {name: 'GET', value: 'GET'},
     {name: 'POST', value: 'POST'},
@@ -382,7 +395,7 @@ const methodsList = [
     url: "",
     name: "",
     catalog_name: "",
-    project_id: undefined,
+    project_id: props?.projectInfo?.project_id ? props?.projectInfo?.project_id : null,
     request_params: {
         params: requestParams,
         body: requestBody,
@@ -393,7 +406,7 @@ const methodsList = [
       response_headers: responseHeader,
       response_body: responseBody,
     },
-    created_by: 1
+    created_by: useUserStore().user_info.user_id
   });
 
   // 载入已有的项目列表
@@ -515,7 +528,15 @@ const methodsList = [
       }
     }
     addInterface(interfaceData).then((res) => {
-      console.log(res);
+      if (res.code === 200){
+        Message.success({
+          content: '创建接口成功',
+          duration: 5 * 1000
+        });
+        emits('onClose', true);
+        emits('onFreshData', true);
+        console.log('emitted');
+      }
     });
   }
 </script>

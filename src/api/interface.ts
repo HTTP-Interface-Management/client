@@ -36,10 +36,11 @@ export function addInterface(interfaceData: InterfaceData){
 }
 
 
-export function queryAllInterfaces(param: queryInterfaceParam){
+export function queryAllInterfaces(params: queryInterfaceParam){
   return axios({
     method: 'get',
     url: '/api/interface/queryAll',
+    params
   });
 }
 
@@ -48,5 +49,36 @@ export function updateInterfaces(newInterfaceData: InterfaceData){
     method: 'post',
     url: '/api/interface/update',
     data: newInterfaceData
+  });
+}
+
+export function deleteInterface(interface_id: number){
+  return axios({
+    method: 'post',
+    url: '/api/interface/delete',
+    data: {
+      interface_id
+    }
+  });
+}
+
+export function queryAllVersions(interface_id: number){
+  return axios({
+    method: 'get',
+    url: '/api/interface/getAllVersions',
+    params: {
+      interface_id: interface_id
+    }
+  });
+}
+
+export function getVersionInfo(interface_id: number, version_id: number){
+  return axios({
+    method: 'post',
+    url: '/api/interface/query',
+    data: {
+      interface_id,
+      version_id
+    }
   });
 }

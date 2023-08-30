@@ -24,7 +24,7 @@
         </div>
       </a-card>
     </a-grid-item>
-    <a-grid-item v-for="i in 10" :key="i">
+    <a-grid-item v-for="i in memberList" :key="i.user_id">
       <a-card
         hoverable
         class="member-card"
@@ -34,10 +34,10 @@
             class="member-info"
           >
             <a-avatar :size="40"></a-avatar>
-            <a-typography-text class="member-username">用户名</a-typography-text>
-            <a-typography-text class="member-identify">身份</a-typography-text>
+            <a-typography-text class="member-username">{{ i.user_name }}</a-typography-text>
+            <a-typography-text class="member-identify">{{ translateRoleId(i.role_id) }}</a-typography-text>
           </span>
-          <a-dropdown position="bl">
+          <a-dropdown position="bl" disabled>
             <a-button
               class="more"
               type="outline"
@@ -63,22 +63,75 @@
       @cancel="closeAddMemberModal"
       ok-text="确认添加"
       :mask-closable="false"
+      @ok="addMember"
     >
-      <a-input placeholder="请输入用户名"/>
+      <a-input placeholder="请输入用户ID" v-model="toAddUserId"/>
+      <a-select
+        :style="{ marginTop: '16px'}"
+        v-model="toAdduserRole"
+        placeholder="请设置用户权限"
+      >
+        <a-option
+          v-for="i in roles"
+          :value="i.role_id"
+        >
+          {{i.title}}
+        </a-option>
+      </a-select>
     </a-modal>
   </a-grid>
 </template>
 
 <script setup lang="ts">
   import { IconMore, IconPlus } from "@arco-design/web-vue/es/icon";
-  import { ref } from "vue";
+  import { onMounted, ref } from "vue";
+  import { getProjectMember, addProjectMemeber } from "@/api/project";
+  import { Message } from "@arco-design/web-vue";
 
+  const props = defineProps(['projectInfo']);
+
+  const memberList = ref([]);
+
+  onMounted(async () => {
+    memberList.value = (await getProjectMember(props.projectInfo.project_id)).data;
+    console.log(memberList.value);
+  });
+
+  const toAddUserId = ref();
+  const toAdduserRole = ref();
   const addMemberModalVisible = ref(false);
   const handleAddMemberModalVisible = () => {
     addMemberModalVisible.value = true
   }
   const closeAddMemberModal = () => {
     addMemberModalVisible.value = false
+  }
+
+  const roles = [
+    { role_id: 2, title: '管理员' },
+    { role_id: 3, title: '普通成员' },
+  ]
+
+  const translateRoleId = (role_id: number) : string => {
+    switch (role_id) {
+      case 1: return '创建者';
+      case 2: return '管理员';
+      default: return '普通成员';
+    }
+  }
+
+  const addMember = () => {
+    addProjectMemeber(props.projectInfo.project_id, parseInt(toAddUserId.value), toAdduserRole.value).then(async (res) => {
+      console.log(res);
+      if (res.code === 200) {
+        Message.success({
+          content: '添加成功',
+          duration: 5 * 1000,
+        });
+        memberList.value = (await getProjectMember(props.projectInfo.project_id)).data;
+        closeAddMemberModal();
+      }
+    })
   }
 </script>
 

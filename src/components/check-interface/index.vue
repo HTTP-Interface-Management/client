@@ -313,10 +313,10 @@
       <div class="items">
         <h3>接口更新历史</h3>
         <a-list>
-          <a-list-item v-for="i in 4" :key="i">
+          <a-list-item v-for="i in interfaceHistoryList">
             <a-list-item-meta
-              title="修复了一些BUG"
-              description="用户名"
+              :title="`修改描述：${i.change_info ? i.change_info : '暂无'}`"
+              :description="`修改者ID：${18}`"
             >
               <template #avatar>
                 <a-avatar :size="8" style="background: rgb(var(--success-6))">
@@ -325,7 +325,7 @@
             </a-list-item-meta>
             <template #actions>
               <a-button
-                @click="onShowInterfaceHistoryModal"
+                @click="onShowInterfaceHistoryModal(i.interface_id, i.version_id)"
                 :disabled="i===1"
               >
                 查看
@@ -407,7 +407,7 @@
     hide-cancel
     draggable
   >
-    <interface-history/>
+    <interface-history :versionHistoryData="currentVersionData"/>
   </a-modal>
   <a-modal
     title="接口修改说明"
@@ -415,10 +415,11 @@
     @cancel="onCancelUpdateInterfaceModal"
     unmount-on-close
     class="commit-update-text"
-    @ok="onHandleUpdateInterface"
+    @ok="updateInterface"
   >
     <a-textarea
       placeholder="请输入接口更新说明"
+      v-model="changeInfo"
     />
   </a-modal>
 </template>
@@ -428,12 +429,13 @@ import { onMounted, reactive, ref } from "vue";
 import { Codemirror } from "vue-codemirror";
 import { getProjectList } from "@/api/user";
 import { useUserStore } from "@/store";
-import { Modal } from "@arco-design/web-vue";
+import { Message, Modal } from "@arco-design/web-vue";
 import { IconEye } from "@arco-design/web-vue/es/icon";
 import MockSpace from "@/components/check-interface/mock-space.vue";
 import InterfaceHistory from "@/components/check-interface/interface-history.vue";
+import { addInterface, deleteInterface, queryAllVersions } from "@/api/interface";
 import { updateInterfaces } from "@/api/interface";
-
+import axios from "axios";
 const methodsList = [
   {name: 'GET', value: 'GET'},
   {name: 'POST', value: 'POST'},
@@ -489,16 +491,20 @@ const props = defineProps(['interfaceData']);
 
 const currentProjectName = ref();
 
-const emiter = defineEmits(['onCheckProjectAuthFailed']);
+const emiter = defineEmits([
+  'onCheckProjectAuthFailed',
+  'onFreshData',
+  'onCloseCheckInterfaceModal'
+]);
 
 // 载入已有的项目列表(若该接口在自己的项目中不存在则关闭窗口)
 let myProjectList = ref();
 onMounted(async () => {
   myProjectList.value = (await getProjectList(useUserStore().user_info.user_id as any)).data;
-
+  interfaceHistoryList.value = ((await queryAllVersions(props.interfaceData.interface_id)).data).reverse();
   for (let i of myProjectList.value){
     if (i.project_id === props.interfaceData.project_id){
-      currentProjectName.value = i.description;
+      currentProjectName.value = i.name;
     }
   }
 
@@ -539,8 +545,7 @@ const addRequestParam = (type: string) => {
       required:'',
       description:''
     } as never);
-  }
-  else if (type === 'path'){
+  } else if (type === 'path'){
     requestParams.path.push({
       name:'',
       type:'',
@@ -624,16 +629,20 @@ const onDeleteInterface = () => {
     title: '警告',
     content: '确定要删除该接口吗？',
     cancelText: '取消',
-    hideCancel: false
+    hideCancel: false,
+    onOk: () => {
+      deleteInterface(props.interfaceData.interface_id).then((res) => {
+        if (res.code === 200) {
+          Message.success({
+            content: '删除成功',
+            duration: 5 * 1000
+          });
+          emiter('onCloseCheckInterfaceModal', true);
+          emiter('onFreshData', true);
+        }
+      })
+    }
   })
-}
-
-const isInterfaceHistoryModalShow = ref(false);
-const onShowInterfaceHistoryModal = () => {
-  isInterfaceHistoryModalShow.value = true
-}
-const onCancelInterfaceHistoryModal = () => {
-  isInterfaceHistoryModalShow.value = false
 }
 
 const isMockModalShow = ref(false);
@@ -645,9 +654,53 @@ const onCancelMockModal = () => {
 }
 
 // 更新接口
-const onHandleUpdateInterface = () => {
+const changeInfo = ref('');
+
+const updateInterface = () => {
+  for (let i in requestBody){
+    if (i !== currentSelectFormat.value){
+      if(i !== 'form-data')
+        requestBody[i] = '';
+      else
+        requestBody[i] = [];
+    }
+  }
+
+  // 加入修改接口描述
+  props.interfaceData.change_info = changeInfo.value;
+
+  updateInterfaces(props.interfaceData).then((res) => {
+    if (res.code === 200){
+      Message.success({
+        content: '接口修改成功',
+        duration: 5 * 1000
+      });
+      onCancelUpdateInterfaceModal();
+      emiter('onFreshData', true);
+      emiter('onCloseCheckInterfaceModal', true);
+    }
+  });
 }
 
+  // 接口历史记录
+  const interfaceHistoryList = ref([]);
+  const currentVersionData = ref({});
+
+  const isInterfaceHistoryModalShow = ref(false);
+  const onShowInterfaceHistoryModal = (interface_id: number, current_id: number) => {
+    isInterfaceHistoryModalShow.value = true
+    setModalHistoryVersionData(interface_id, current_id)
+  }
+  const onCancelInterfaceHistoryModal = () => {
+    isInterfaceHistoryModalShow.value = false
+  }
+
+  const setModalHistoryVersionData = (interface_id: number, version_id: number) => {
+    currentVersionData.value = {
+      interface_id,
+      version_id
+    }
+  }
 </script>
 
 <style scoped lang="less">
