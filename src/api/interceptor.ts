@@ -16,6 +16,8 @@ if (import.meta.env.VITE_API_BASE_URL) {
   axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 }
 
+axios.defaults.timeout = 5000;
+
 axios.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     // let each request carry token
@@ -50,7 +52,7 @@ axios.interceptors.response.use(
   },
   (error) => {
     Message.error({
-      content: error.msg || 'Request Error',
+      content: error.msg || '网络错误',
       duration: 5 * 1000,
     });
     return Promise.reject(error);

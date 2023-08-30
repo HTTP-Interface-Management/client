@@ -39,7 +39,6 @@
         <interface-item
           v-for="i in interfaceList"
           @onHandleCheckInterface="onHandleCheckInterface(i)"
-          @onHandleCheckProject="onHandleCheckProject"
           :interface-data="i"
         />
       </a-grid>
@@ -67,6 +66,7 @@
       <check-interface
         :interfaceData="currentCheckInterfaceData"
         @onCheckProjectAuthFailed="onCheckProjectAuthFailed"
+        @onCloseCheckInterfaceModal="onCloseCheckInterfaceModal"
       />
     </a-modal>
     <a-modal
@@ -82,7 +82,7 @@
       :unmount-on-close="true"
       :footer="false"
     >
-      <create-interface/>
+      <create-interface @onFreshData="onFreshData"/>
     </a-modal>
     <a-modal
       :visible="checkProjectModalVisible"
@@ -95,7 +95,10 @@
       unmount-on-close
       :unmount-on-close="true"
     >
-      <ProjectInfo @onHandleCloseModal="onHandleCancelCheckProject"/>
+<!--      <ProjectInfo-->
+<!--        @onHandleCloseModal="onHandleCancelCheckProject"-->
+<!--        @onFreshData="onFreshData"-->
+<!--      />-->
     </a-modal>
   </div>
 </template>
@@ -160,8 +163,18 @@
   const onCheckProjectAuthFailed = () => {
     checkInterfaceModalVisible.value = false;
     Modal.error({
-      content: '暂无权限访问此项目'
+      content: '暂无权限访问此项目',
     })
+  }
+
+  const onFreshData = async () => {
+    interfaceList.value = (await queryAllInterfaces({})).data;
+    onHandleCancelCreateInterface();
+  }
+
+  const onCloseCheckInterfaceModal = async () => {
+    interfaceList.value = (await queryAllInterfaces({})).data;
+    onHandleCancelCheckInterface();
   }
 
 </script>

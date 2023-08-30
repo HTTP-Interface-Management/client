@@ -55,7 +55,6 @@ const onHandleCheckProject = () => {
 const props = defineProps(['interfaceData']);
 
 
-console.log();
 </script>
 
 <style scoped lang="less">

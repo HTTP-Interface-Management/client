@@ -24,7 +24,11 @@
       </a-page-header>
     </div>
     <a-grid class="main" :cols="{ xs: 1, sm: 1, md: 2 ,lg: 2, xxl: 3}" :col-gap="32" :row-gap="32">
-      <projectItem v-for="i in 20" :key="i" @onHandelModalVisible="onHandelModalVisible"/>
+      <projectItem
+        v-for="i in projectList"
+        :projectData="i"
+        @click="onHandelModalVisible(i)"
+      />
     </a-grid>
     <div class="footer">
       <a-pagination
@@ -42,10 +46,14 @@
       :mask-style="customModalStyle.maskStyle"
       unmount-on-close
     >
-      <ProjectInfo @onHandleCloseModal="onCancelProjectModal"/>
+      <ProjectInfo
+        @onHandleCloseModal="onCancelProjectModal"
+        :projectInfo="selectedProjectInfo"
+        @onCancel="onCancelProjectModal"
+      />
     </a-modal>
 
-    <a-modal 
+    <a-modal
       title="创建项目"
       fullscreen
       :esc-to-close="false"
@@ -55,19 +63,28 @@
       :modal-style="customModalStyle.modalStyle"
       :body-style="customModalStyle.maskStyle"
       :mask-style="customModalStyle.bodyStyle"
+      :footer="false"
     >
       <create-project/>
-    </a-modal>    
+    </a-modal>
 
   </div>
 </template>
 
 <script setup lang="ts">
   import { IconPlus, IconDown } from '@arco-design/web-vue/es/icon';
-  import { ref } from "vue";
+  import { onMounted, ref } from "vue";
   import ProjectInfo from '@/views/projects/list/components/projectInfo.vue';
   import ProjectItem from '@/views/projects/list/components/projectItem.vue';
   import createProject from '@/components/create-project/index.vue'
+  import { getAllProjectList } from "@/api/project";
+
+  const projectList = ref([]);
+  const selectedProjectInfo = ref();
+
+  onMounted(async () => {
+    projectList.value = (await getAllProjectList({page: 1, keyword: ''})).data;
+  })
 
   const customModalStyle = {
     modalStyle: {
@@ -82,11 +99,13 @@
     }
   }
   const modalVisible = ref(false)
-  const onHandelModalVisible = () => {
-    modalVisible.value = true
+  const onHandelModalVisible = (projectInfo: any) => {
+    selectedProjectInfo.value = projectInfo
+    modalVisible.value = true;
   }
-  const onCancelProjectModal = () => {
-    modalVisible.value = false
+  const onCancelProjectModal = async () => {
+    modalVisible.value = false;
+    projectList.value = (await getAllProjectList({page: 1, keyword: ''})).data;
   }
 
   let createProjectModalVisible = ref(false)

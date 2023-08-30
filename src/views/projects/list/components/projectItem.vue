@@ -5,20 +5,21 @@
         <img src="https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/24e0dd27418d2291b65db1b21aa62254.png~tplv-uwbnlip3yd-webp.webp" />
       </div>
       <div class="text-content">
-        <div class="project-name">项目名称</div>
-        <div class="created-time">2023年8月8日 18:56:01</div>
+        <div class="project-name">{{projectData.name}}</div>
+        <div class="created-time">{{projectData.created_at.substring(0, 10)}}</div>
       </div>
     </div>
   </a-grid-item>
 </template>
 
 <script setup lang="ts">
-
+  const props = defineProps(['projectData']);
   const emit = defineEmits<{(e: 'onHandelModalVisible', value: boolean): void}>()
 
   const onHandelModalVisible = () => {
     emit('onHandelModalVisible', true)
   }
+
 </script>
 
 <style scoped lang="less">

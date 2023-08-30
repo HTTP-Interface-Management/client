@@ -3,26 +3,32 @@
     <div class="interface-history-data">
       <div class="items">
         <h3>接口名称</h3>
-        <span>测试接口</span>
+        <span>{{interfaceInfo.name}}</span>
       </div>
       <div class="items">
         <h3>接口功能描述</h3>
-        <span>获取二级分类</span>
+        <span>{{interfaceInfo.description}}</span>
+      </div>
+      <div class="items">
+        <h3>版本号</h3>
+        <span>{{interfaceInfo.version_id}}</span>
       </div>
       <div class="items">
         <h3>接口地址（URL）</h3>
-        <span>http://testtapi.xuexiluxian.cn/api/course/category/getSecondCategorys</span>
+        <span>{{interfaceInfo.url}}</span>
       </div>
       <div class="items">
         <h3>HTTP请求方式</h3>
-        <span>GET</span>
+        <span>{{interfaceInfo.method}}</span>
       </div>
 
       <div class="items">
         <h3>请求参数</h3>
         <a-tabs default-active-key="1" type="card">
           <a-tab-pane title="Request Headers" key="1">
-            <a-table :columns="columns" :data="response" />
+            <a-table
+              :columns="columns"
+            />
           </a-tab-pane>
           <a-tab-pane title="Request Body" key="2">
             <a-tabs>
@@ -49,15 +55,19 @@
                   <codemirror :style="{ height: '200px'}" />
                 </div>
               </a-tab-pane>
-              <a-tab-pane title="binary" key="binary">
-                <div class="body-binary">
-                  <a-upload action="/" :limit="1"/>
-                </div>
-              </a-tab-pane>
             </a-tabs>
           </a-tab-pane>
-          <a-tab-pane title="Example" key="3">
-            <a-table :columns="columns" :data="response" />
+          <a-tab-pane title="Params" key="3">
+            <b :style="{marginTop: '16px'}">Query参数</b>
+            <a-table
+              :columns="columns"
+              :data="interfaceInfo.request_params?.params?.query"
+            />
+            <b :style="{marginTop: '16px'}">Path参数</b>
+            <a-table
+              :columns="columns"
+              :data="interfaceInfo.request_params?.params?.path"
+            />
           </a-tab-pane>
         </a-tabs>
       </div>
@@ -66,13 +76,15 @@
         <h3>返回数据</h3>
         <a-tabs default-active-key="1" type="card">
           <a-tab-pane title="Request Headers" key="1">
-            <a-table :columns="columns" :data="response" />
+            <a-table
+              :columns="columns"
+              :data="interfaceInfo.response_data?.response_headers"
+            />
           </a-tab-pane>
           <a-tab-pane title="Request Body" key="2">
-            <codemirror :style="{ height: '200px'}" />
-          </a-tab-pane>
-          <a-tab-pane title="Cookies" key="3">
-            <a-table :columns="columns" :data="response" />
+            <codemirror
+              :style="{ height: '200px'}"
+            />
           </a-tab-pane>
         </a-tabs>
       </div>
@@ -81,17 +93,14 @@
 </template>
 
 <script setup lang="ts">
-  import { reactive } from "vue";
+  import { onBeforeMount, onMounted, reactive, ref } from "vue";
   import { Codemirror } from "vue-codemirror";
+  import { getVersionInfo } from "@/api/interface";
 
   const columns = [
     {
       title: '参数',
       dataIndex: 'param',
-    },
-    {
-      title: '值',
-      dataIndex: 'inputValue',
     },
     {
       title: '类型',
@@ -114,6 +123,27 @@
     illustrate:''
   }]);
 
+  const props = defineProps(['versionHistoryData']);
+  const interfaceInfo = ref({});
+
+
+  onBeforeMount(async () => {
+    console.log(666);
+    interfaceInfo.value = (await getVersionInfo(props.versionHistoryData.interface_id, props.versionHistoryData.version_id)).data;
+    if (!interfaceInfo.value.request_params.Header)
+      interfaceInfo.value.request_params.Header = [];
+    if (!interfaceInfo.value.request_params.body['form-data'])
+      interfaceInfo.value.request_params.body['form-data'] = [];
+    if (!interfaceInfo.value.request_params.params.query)
+      interfaceInfo.value.request_params.params.query = [];
+    if (!interfaceInfo.value.request_params.params.path)
+      interfaceInfo.value.request_params.params.path = [];
+    if (!interfaceInfo.value.response_data.response_headers)
+      interfaceInfo.value.response_data.response_headers = [];
+    if (!interfaceInfo.value.response_data.response_body)
+      interfaceInfo.value.response_data.response_body = [];
+    console.log(777,interfaceInfo.value);
+  })
 </script>
 
 <style scoped lang="less">

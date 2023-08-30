@@ -1,78 +1,55 @@
 <template>
   <a-collapse>
     <a-collapse-item
-      v-for="i in 5"
-      :header="`接口集${i}`"
+      v-for="i in catalogList"
+      :header="`${i?i : ' '}`"
       class="interface-collection"
       :key="i"
     >
       <div
-        v-for="j in i"
+        v-for="interfaceItem in interfaceList.filter((v)=> {return i===v.catalog_name})"
         class="interface-item"
-        :key="j"
       >
         <div class="item-left">
           <div class="interface-icon">
             <icon-link/>
           </div>
           <div class="interface-text">
-            <div class="interface-title">这是接口名称</div>
-            <div class="interface-link">/api/testApi/helloWorld</div>
+            <div class="interface-title">{{interfaceItem.name}}</div>
+            <div class="interface-link">{{interfaceItem.url}}</div>
           </div>
         </div>
         <a-button-group>
           <a-button
             type="outline"
-            @click="onHandleCheckInterfaceModalVisible"
+            @click="onHandleCheckInterfaceModalVisible(interfaceItem)"
           >
             <template #icon>
               <icon-eye/>
             </template>
             查看
           </a-button>
-          <a-button type="primary">删除</a-button>
+          <a-button type="primary" @click="onDeleteInterface(interfaceItem.interface_id)">删除</a-button>
         </a-button-group>
       </div>
-      <template #extra>
-        <a-button-group>
-          <a-button @click.stop="onHandleCreateInterfaceModalVisible">
-            <template #icon>
-              <icon-plus/>
-            </template>
-          </a-button>
-          <a-button @click.stop="">
-            <template #icon>
-              <icon-delete/>
-            </template>
-          </a-button>
-        </a-button-group>
-      </template>
     </a-collapse-item>
-    <a-modal
-      title="创建接口"
-      fullscreen
-      :esc-to-close="false"
-      :mask-closable="false"
-      :visible="createInterfaceModalVisible"
-      @cancel="onCancelCreateInterfaceModal"
-      :modal-style="customModalStyle.modalStyle"
-      :body-style="customModalStyle.bodyStyle"
-      :mask-style="customModalStyle.maskStyle"
-    >
-      <create-interface/>
-    </a-modal>
     <a-modal
       title="查看接口"
       fullscreen
       :esc-to-close="false"
       :mask-closable="false"
+      :footer="false"
       :visible="checkInterfaceModalVisible"
       @cancel="onCancelCheckInterfaceModal"
       :modal-style="customModalStyle.modalStyle"
       :body-style="customModalStyle.bodyStyle"
       :mask-style="customModalStyle.maskStyle"
+      unmount-on-close
     >
-      <check-interface/>
+      <check-interface
+        :interfaceData="selectedInterfaceData"
+        @onFreshData="onFreshData"
+      />
     </a-modal>
   </a-collapse>
 </template>
@@ -82,6 +59,12 @@
   import checkInterface from '@/components/check-interface/index.vue';
   import createInterface from '@/components/create-interface/index.vue';
   import { ref } from "vue";
+  import { Message, Modal } from "@arco-design/web-vue";
+  import { deleteInterface } from "@/api/interface";
+
+  const props = defineProps(['catalogList', 'interfaceList']);
+  const emit = defineEmits(['onFreshData', 'onClose'])
+  const selectedInterfaceData = ref({});
 
   const customModalStyle = {
     modalStyle: {
@@ -98,17 +81,41 @@
 
   let createInterfaceModalVisible = ref(false);
   let checkInterfaceModalVisible = ref(false);
-  const onHandleCreateInterfaceModalVisible = () => {
-    createInterfaceModalVisible.value = true;
-  }
   const onCancelCreateInterfaceModal = () => {
     createInterfaceModalVisible.value = false;
   }
-  const onHandleCheckInterfaceModalVisible = () => {
+  const onHandleCheckInterfaceModalVisible = (interfaceItem: any) => {
+
+    console.log(selectedInterfaceData);
+    selectedInterfaceData.value = interfaceItem;
     checkInterfaceModalVisible.value = true;
   }
   const onCancelCheckInterfaceModal = () => {
     checkInterfaceModalVisible.value = false;
+  }
+
+  const onFreshData = () => {
+    emit('onFreshData', true);
+  }
+
+  const onDeleteInterface = (interface_id: number) => {
+    Modal.error({
+      title: '警告',
+      content: '确定要删除该接口吗？',
+      cancelText: '取消',
+      hideCancel: false,
+      onOk: () => {
+        deleteInterface(interface_id).then((res) => {
+          if (res.code === 200) {
+            Message.success({
+              content: '删除成功',
+              duration: 5 * 1000
+            });
+            emit('onFreshData', true);
+          }
+        })
+      }
+    })
   }
 </script>
 
