@@ -463,18 +463,21 @@ const HeaderAndParamsType = [
   'array',
 ]
 
+
+const props = defineProps(['interfaceData']);
+
 let requestHeader = reactive([]);
 
 const requestBody = reactive({
-  'form-data': [],
-  'json': '',
-  'yaml': '',
-  'xml': ''
+  'form-data': props.interfaceData.request_params.body['form-data'] ? props.interfaceData.request_params.body['form-data'] : [],
+  'json': props.interfaceData.request_params.body['json'] ? props.interfaceData.request_params.body['json'] : '',
+  'yaml': props.interfaceData.request_params.body['yaml'] ? props.interfaceData.request_params.body['yaml'] : '',
+  'xml': props.interfaceData.request_params.body['xml'] ? props.interfaceData.request_params.body['xml'] : '',
 });
 
 const requestParams = reactive({
-  'query': [],
-  'path': []
+  'query': props.interfaceData.request_params.params.query ? props.interfaceData.request_params.params.query : [],
+  'path': props.interfaceData.request_params.params.path ? props.interfaceData.request_params.params.path : []
 })
 
 // body 格式
@@ -483,11 +486,11 @@ const onBodyFormatChange = (key: string | number) => {
   currentSelectFormat.value = key;
 }
 
-const responseHeader = reactive([]);
+const responseHeader = reactive(props.interfaceData.response_data.response_headers ? props.interfaceData.response_data.response_headers : []);
 
-const responseBody = ref(null);
+const responseBody = ref(props.interfaceData.response_data.response_body ? props.interfaceData.response_data.response_body : '');
+console.log(responseBody.value);
 
-const props = defineProps(['interfaceData']);
 
 const currentProjectName = ref();
 
@@ -669,7 +672,8 @@ const updateInterface = () => {
   // 加入修改接口描述
   props.interfaceData.change_info = changeInfo.value;
 
-  updateInterfaces(props.interfaceData).then((res) => {
+  props.interfaceData.response_data.response_body = responseBody.value;
+    updateInterfaces(props.interfaceData).then((res) => {
     if (res.code === 200){
       Message.success({
         content: '接口修改成功',
